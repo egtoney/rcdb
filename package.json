@@ -1,0 +1,44 @@
+{
+  "name": "rnano",
+  "version": "1.0.0",
+  "description": "Relational CouchDB",
+  "scripts": {
+    "test": "jest",
+    "build": "tsc",
+	"format": "prettier --write \"src/**/*.ts\" \"src/**/*.js\"",
+	"lint": "tslint -p tsconfig.json",
+	"prepare": "npm run build",
+	"prepublishOnly" : "npm test && npm run lint",
+	"preversion" : "npm run lint",
+	"version" : "npm run format && git add -A",
+	"postversion" : "git push && git push --tags"
+  },
+  "repository": {
+	"type": "git",
+	"url": "git+https://github.com/egtoney/rcdb.git"
+  },
+  "author": "Ethan Toney",
+  "license": "ISC",
+  "bugs": {
+	"url": "https://github.com/egtoney/rcdb/issues"
+  },
+  "homepage": "https://github.com/egtoney/rcdb",
+  "dependencies": {
+    "lodash": "^4.17.21",
+    "nano": "^10.0.0",
+    "uuid": "^8.3.2"
+  },
+  "devDependencies": {
+    "@types/jest": "^28.1.5",
+    "jest": "^28.1.3",
+    "prettier": "^2.7.1",
+    "ts-jest": "^28.0.5",
+    "tslint": "^6.1.3",
+    "tslint-config-prettier": "^1.18.0",
+    "typescript": "^4.7.4"
+  },
+  "files": [
+	"lib/**/*"
+  ],
+  "keywords": ["Relational", "RDB", "Types", "Tables", "CouchDB", "Nano", "PouchDB"]
+}
