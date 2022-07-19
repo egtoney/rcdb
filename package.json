@@ -1,7 +1,9 @@
 {
-	"name": "@egtoney/rnano",
-	"version": "1.0.0",
+	"name": "rcdb",
+	"version": "0.0.1",
 	"description": "Relational CouchDB",
+	"main": "lib/index.js",
+	"types": "lib/index.d.ts",
 	"scripts": {
 		"test": "jest",
 		"build": "tsc",
@@ -23,7 +25,7 @@
 		"url": "https://github.com/egtoney/rcdb/issues"
 	},
 	"publishConfig": {
-		"registry": "https://npm.pkg.github.com"
+		"registry": "https://registry.npmjs.org/"
 	},
 	"homepage": "https://github.com/egtoney/rcdb",
 	"dependencies": {

@@ -5,6 +5,7 @@ import gen_design_document from '../design_document';
 
 export type DocumentId = string;
 
+/** Describes a typed document */
 export interface Document {
 	_id?: DocumentId;
 	_rev?: string;
@@ -13,11 +14,13 @@ export interface Document {
 	[key: string]: any;
 }
 
+/** Describes meta information for a design document */
 export interface DesignDocumentMeta {
 	indexes: string[];
 	write_roles: string[];
 }
 
+/** Describes a design document */
 export interface DesignDocument extends Document {
 	meta: DesignDocumentMeta;
 	views: {
@@ -33,10 +36,7 @@ interface InsertResult {
 	rev: string;
 }
 
-interface ListResult {
-	rows: Document[];
-}
-
+/** Transforms a CouchDB insert response into a list of documents */
 function returnOneInsert<T extends Document>(document: T, result: InsertResult): T {
 	if (!result.ok) {
 		throw Error((result as any).error);
@@ -51,10 +51,16 @@ function returnOneInsert<T extends Document>(document: T, result: InsertResult):
 	);
 }
 
+/** Trnasforms a CouchDB bulk insert response into a list of documents */
 function returnManyInsert<T extends Document>(documents: T[], result: any[] | InsertResult[]): T[] {
 	return documents.map((document, i) => returnOneInsert(document, result[i]));
 }
 
+interface ListResult {
+	rows: Document[];
+}
+
+/** Transforms a CouchDB view response into a list of documents */
 function returnManyView<T extends Document>(documents: ListResult): T[] {
 	return documents.rows.map((row) => row.doc as T);
 }
@@ -65,22 +71,30 @@ export interface TypeScopeConfig {
 	write_roles?: string[];
 }
 
+/**
+ * A scope encasing a Nano DocumentScope that adds type information to all documents in order to later filter those documents.
+ */
 export class TypeScope implements TypeScopeConfig {
-	/** Document scope */
+	/** Nano - Document scope */
 	public document: DocumentScope<Document>;
 
+	/** Used as a prefix for the type */
 	schema: string = 'dbo';
-	type: string;
+
+	/** Constructs a CouchDB view on this type with the key being the index */
 	indexes: string[];
+
+	/** Restrict write access to this type by seperately assigned user roles */
 	write_roles: string[];
 
 	private design_document: DesignDocument;
 	private __pull_indexes: boolean;
 	private __pull_write_roles: boolean;
+	private __type: string;
 
 	private constructor(nano: DocumentScope<Document>, config: TypeScopeConfig) {
 		this.document = nano;
-		this.type = config.type;
+		this.__type = config.type;
 		this.indexes = config.indexes || [];
 		this.__pull_indexes = config.indexes === undefined;
 		this.write_roles = config.write_roles || [];
@@ -88,12 +102,24 @@ export class TypeScope implements TypeScopeConfig {
 		this.design_document = this.dd;
 	}
 
+	/**
+	 * 
+	 * @param nano Nano document scope
+	 * @param config Type's config information or type name. See {@link TypeScopeConfig}.
+	 * @returns 
+	 */
 	public static async use(nano: DocumentScope<Document>, config: TypeScopeConfig | string) {
 		const scope = new TypeScope(nano, typeof config === 'string' ? { type: config } : config);
 		await scope.dd_update();
 		return scope;
 	}
 
+	/** The full type name for this Scope. ex: dbo.type */
+	public get type(): string {
+		return `${this.schema}.${this.__type}`;
+	}
+
+	/** Meta information that should be stored in the design document */
 	public get meta(): DesignDocumentMeta {
 		return {
 			indexes: this.indexes,
@@ -101,14 +127,17 @@ export class TypeScope implements TypeScopeConfig {
 		};
 	}
 
+	/** Short design document name. ex: dbo.type */
 	public get dd_s_name(): string {
 		return `${this.schema}.${this.type}`;
 	}
 
+	/** Design document name. ex: _design/dbo.type */
 	public get dd_name(): string {
 		return `_design/${this.dd_s_name}`;
 	}
 
+	/** Generates and returns a design document for this type. */
 	public get dd(): DesignDocument {
 		return gen_design_document(this) as DesignDocument;
 	}
@@ -144,13 +173,18 @@ export class TypeScope implements TypeScopeConfig {
 		}
 	}
 
-	public tag(doc: Document): Document;
-	public tag(doc: Document[]): Document[];
-
 	/**
 	 * Tag document with type information.
 	 * @param doc
 	 */
+	public tag(doc: Document): Document;
+	
+	/**
+	 * Tag document with type information.
+	 * @param doc
+	 */
+	public tag(doc: Document[]): Document[];
+	
 	public tag(doc: Document | Document[]): Document | Document[] {
 		if (_.isArray(doc)) {
 			return doc.map((d) => Object.assign({}, d, { [TYPE_FIELD]: this.type }));
