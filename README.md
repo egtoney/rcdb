@@ -156,7 +156,6 @@ You must have docker installed.
 
 - [x] Type based design documents
 - [x] Per type write security
-- [ ] Global database write security
-- [ ] Partition types in databse
+- [x] Partition types in database
+- [-] PouchDB support
 - [ ] Foreign keys
-- [ ] PouchDB support

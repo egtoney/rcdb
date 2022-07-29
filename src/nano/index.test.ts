@@ -1,22 +1,10 @@
-import { TypeScope } from '.';
+import _ from 'lodash';
 import nano from 'nano';
 import { v4 } from 'uuid';
-import _ from 'lodash';
+import { TypeScope } from '.';
 import { TYPE_FIELD } from '../constants';
-import util from 'util';
 
-const exec = util.promisify(require('child_process').exec);
-
-const con = nano({
-	url: 'http://localhost:5984',
-	requestDefaults: {
-		jar: true,
-	},
-});
-
-const newCon = async () => TypeScope.use(con.use(TEST_DB_NAME), v4());
-
-const TEST_DB_NAME = 'rnano_tests';
+const TEST_DB_NAME = 'rnano_tests_nano';
 const TEST_DB_DOCS = [
 	{ name: 'C++' },
 	{ name: 'Rust' },
@@ -26,6 +14,15 @@ const TEST_DB_DOCS = [
 	{ name: 'C' },
 ];
 let db_type, db_records;
+
+const con = nano({
+	url: 'http://localhost:5984',
+	requestDefaults: {
+		jar: true,
+	},
+});
+
+const newCon = async () => TypeScope.use(con.use(TEST_DB_NAME), v4());
 
 function streamToString(stream: NodeJS.ReadStream): Promise<string> {
 	const chunks: any[] = [];
@@ -43,29 +40,15 @@ function expectToBeDocument(doc) {
 }
 
 beforeAll(async () => {
-	// couchdb credentials
-	const username = 'rcdb';
-	const password = 'tThAqvWVhXDxLG';
-
-	// start docker
-	await exec(
-		`docker run --rm --name rcdb-test -p 5984:5984 -e COUCHDB_USER=${username} -e COUCHDB_PASSWORD=${password} -d couchdb:3.2.0`,
-	);
-	await new Promise((res) => setTimeout(res, 1000));
-
 	// auth with docker
-	await con.auth(username, password);
+	await con.auth(process.env.DB_USERNAME as string, process.env.DB_PASSWORD as string);
 	try {
 		await con.db.destroy(TEST_DB_NAME);
 	} catch (e) {}
 	await con.db.create(TEST_DB_NAME);
 });
 
-afterAll(async () => {
-	await exec(`docker stop rcdb-test`);
-});
-
-describe('TypeScope - nano', () => {
+describe('TypeScope - Nano', () => {
 	describe('constructors', () => {
 		test('TypeScope.use(nano, type)', () => {
 			TypeScope.use(con.use(TEST_DB_NAME), v4());
@@ -138,6 +121,12 @@ describe('TypeScope - nano', () => {
 				db_type = await newCon();
 				db_type.tag(obj);
 				expect(obj).toEqual(original);
+			});
+
+			test('TypeScope.tag(Document[]) - assigns partioned index', async () => {
+				const obj: any = { key: 'value' };
+				db_type = await newCon();
+				expect(db_type.tag(obj)._id).toMatch(/^[^:]*:[^:]*$/i);
 			});
 		});
 
