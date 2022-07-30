@@ -6,7 +6,9 @@ process.env.DB_PASSWORD = 'tThAqvWVhXDxLG';
 
 module.exports = async () => {
 	// stop docker
-	await exec(`docker stop rcdb-test`);
+	try {
+		await exec(`docker stop rcdb-test`);
+	} catch (e) {}
 
 	// start docker
 	await exec(

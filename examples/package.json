@@ -8,6 +8,7 @@
   "license": "ISC",
   "dependencies": {
     "nano": "^10.0.0",
+    "pouchdb": "^7.3.0",
     "rcdb": "^1.0.0"
   }
 }
