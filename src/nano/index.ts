@@ -15,10 +15,10 @@ export class TypeScope extends ATypeScope {
 	}
 
 	/**
-	 * 
+	 *
 	 * @param nano Nano document scope
 	 * @param config Type's config information or type name. See {@link RcdbConfig}.
-	 * @returns 
+	 * @returns
 	 */
 	public static async use(nano: DocumentScope<Document>, config: RcdbConfig | string) {
 		const scope = new TypeScope(nano, typeof config === 'string' ? { type: config } : config);
@@ -33,7 +33,7 @@ export class TypeScope extends ATypeScope {
 	protected ninsert(doc: any): Promise<InsertResult> {
 		return this.document.insert(doc);
 	}
-	
+
 	protected ndestroy(docname: string, rev: string) {
 		return this.document.destroy(docname, rev);
 	}
@@ -51,7 +51,7 @@ export class TypeScope extends ATypeScope {
 			}),
 		);
 	}
-	
+
 	/**
 	 * @see {@link DocumentScope.fetch}
 	 */
@@ -90,5 +90,38 @@ export class TypeScope extends ATypeScope {
 	public async listAsStream() {
 		await this.dd_update();
 		return this.document.viewAsStream(this.dd_s_name, 'all_docs', { include_docs: true });
+	}
+
+	/**
+	 * @see {@link DocumentScope.insert}
+	 */
+	public async insert(document: Document) {
+		await this.dd_update();
+		const _document = this.tag(document);
+		return ATypeScope.returnOneInsert(_document, await this.ninsert(_document));
+	}
+
+	/**
+	 * @see {@link DocumentScope.get}
+	 */
+	public async get(docname: string) {
+		await this.dd_update();
+		return this.nget(docname);
+	}
+
+	public async destroy(docname: string, rev: string);
+
+	public async destroy(doc: Document);
+
+	/**
+	 * @see {@link DocumentScope.destroy}
+	 */
+	public async destroy(docname: string | Document, rev?: string) {
+		await this.dd_update();
+		if (typeof docname !== 'string') {
+			return this.ndestroy(docname._id as string, docname._rev as string);
+		} else {
+			return this.ndestroy(docname, rev as string);
+		}
 	}
 }

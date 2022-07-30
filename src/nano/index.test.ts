@@ -50,14 +50,72 @@ beforeAll(async () => {
 
 describe('TypeScope - Nano', () => {
 	describe('constructors', () => {
-		test('TypeScope.use(nano, type)', () => {
-			TypeScope.use(con.use(TEST_DB_NAME), v4());
+		test('TypeScope.use(nano, type)', async () => {
+			await TypeScope.use(con.use(TEST_DB_NAME), v4());
 		});
 
-		test('TypeScope.use(nano, config)', () => {
-			TypeScope.use(con.use(TEST_DB_NAME), {
+		test('TypeScope.use(nano, config)', async () => {
+			await TypeScope.use(con.use(TEST_DB_NAME), {
 				type: v4(),
 			});
+		});
+
+		test('TypeScope.use(nano, config) - fail when type contains ":"', async () => {
+			await expect(
+				TypeScope.use(con.use(TEST_DB_NAME), {
+					type: 'test:test',
+				}),
+			).rejects.toThrow();
+		});
+	});
+
+	describe('util functions', () => {
+		test('TypeScope.tag(Document)', async () => {
+			db_type = await newCon();
+			const res = db_type.tag({
+				key: 'value',
+			});
+			expect(res).toMatchObject({
+				key: 'value',
+				[TYPE_FIELD]: db_type.type,
+			});
+		});
+
+		test('TypeScope.tag(Document) - does not modify document on insert', async () => {
+			const obj = { key: 'value' };
+			const original = _.cloneDeep(obj);
+			db_type = await newCon();
+			db_type.tag(obj);
+			expect(obj).toEqual(original);
+		});
+
+		test('TypeScope.tag(Document[])', async () => {
+			db_type = await newCon();
+			const res = db_type.tag([
+				{
+					key: 'value',
+				},
+			]);
+			expect(res).toMatchObject([
+				{
+					key: 'value',
+					[TYPE_FIELD]: db_type.type,
+				},
+			]);
+		});
+
+		test('TypeScope.tag(Document[]) - does not modify document on insert', async () => {
+			const obj = [{ key: 'value' }, { key: 'value' }];
+			const original = _.cloneDeep(obj);
+			db_type = await newCon();
+			db_type.tag(obj);
+			expect(obj).toEqual(original);
+		});
+
+		test('TypeScope.tag(Document[]) - assigns partioned index', async () => {
+			const obj: any = { key: 'value' };
+			db_type = await newCon();
+			expect(db_type.tag(obj)._id).toMatch(/^[^:]*:[^:]*$/i);
 		});
 	});
 
@@ -79,54 +137,6 @@ describe('TypeScope - Nano', () => {
 
 				expect(res).toMatchObject(TEST_DB_DOCS[0]);
 				expectToBeDocument(res);
-			});
-
-			test('TypeScope.tag(Document)', async () => {
-				db_type = await newCon();
-				const res = db_type.tag({
-					key: 'value',
-				});
-				expect(res).toMatchObject({
-					key: 'value',
-					[TYPE_FIELD]: db_type.type,
-				});
-			});
-
-			test('TypeScope.tag(Document) - does not modify document on insert', async () => {
-				const obj = { key: 'value' };
-				const original = _.cloneDeep(obj);
-				db_type = await newCon();
-				db_type.tag(obj);
-				expect(obj).toEqual(original);
-			});
-
-			test('TypeScope.tag(Document[])', async () => {
-				db_type = await newCon();
-				const res = db_type.tag([
-					{
-						key: 'value',
-					},
-				]);
-				expect(res).toMatchObject([
-					{
-						key: 'value',
-						[TYPE_FIELD]: db_type.type,
-					},
-				]);
-			});
-
-			test('TypeScope.tag(Document[]) - does not modify document on insert', async () => {
-				const obj = [{ key: 'value' }, { key: 'value' }];
-				const original = _.cloneDeep(obj);
-				db_type = await newCon();
-				db_type.tag(obj);
-				expect(obj).toEqual(original);
-			});
-
-			test('TypeScope.tag(Document[]) - assigns partioned index', async () => {
-				const obj: any = { key: 'value' };
-				db_type = await newCon();
-				expect(db_type.tag(obj)._id).toMatch(/^[^:]*:[^:]*$/i);
 			});
 		});
 

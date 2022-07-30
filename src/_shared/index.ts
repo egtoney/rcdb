@@ -1,6 +1,6 @@
 import _ from 'lodash';
 import * as uuid from 'uuid';
-import { TYPE_FIELD } from "../constants";
+import { TYPE_FIELD } from '../constants';
 import gen_design_document from '../design_document';
 
 export type DocumentId = string;
@@ -47,7 +47,6 @@ export interface RcdbConfig {
 }
 
 export abstract class ATypeScope {
-
 	/** Used as a prefix for the type */
 	public schema: string = 'dbo';
 
@@ -66,7 +65,7 @@ export abstract class ATypeScope {
 	protected constructor(config: RcdbConfig) {
 		// sanity check type for partitioning
 		if (config.type.includes(':')) {
-			throw new Error('types can not include colon due to the partition implementation on CouchDB')
+			throw new Error('types can not include colon due to the partition implementation on CouchDB');
 		}
 
 		this.__type = config.type;
@@ -201,42 +200,7 @@ export abstract class ATypeScope {
 
 	protected abstract ninsert(doc: any): Promise<InsertResult>;
 
-	/**
-	 * @see {@link DocumentScope.insert}
-	 */
-	public async insert(document: Document) {
-		await this.dd_update();
-		const _document = this.tag(document);
-		return ATypeScope.returnOneInsert(_document, await this.ninsert(_document));
-	}
-	
 	protected abstract nget(docname: string): Promise<Document>;
 
-	/**
-	 * @see {@link DocumentScope.get}
-	 */
-	public async get(docname: string) {
-		await this.dd_update();
-		return this.nget(docname);
-	}
-
 	protected abstract ndestroy(docname: string, rev: string);
-
-	public async destroy(docname: string, rev: string);
-
-	public async destroy(doc: Document);
-
-	/**
-	 * @see {@link DocumentScope.destroy}
-	 */
-	public async destroy(docname: string | Document, rev?: string) {
-		await this.dd_update();
-		if (typeof docname !== 'string') {
-			return this.ndestroy(docname._id as string, docname._rev as string);
-		} else {
-			return this.ndestroy(docname, rev as string);
-		}
-	}
-
-	
 }

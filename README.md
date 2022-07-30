@@ -76,11 +76,17 @@ const con = nano({
 
 `opt.write_roles` - A list of user roles [CouchDB docs](https://docs.couchdb.org/en/3.2.0/intro/security.html#users-documents) which are granted access to write documents to this type. This does not restrict read access or write access to the entire database due to restrictions of CouchDB. If you want this behavior I'd recommend looking into CouchDB's database security [CouchDB docs](https://docs.couchdb.org/en/3.2.0/api/database/security.html).
 
-## Type Functions
+### RCDB - Methods
 
 #### TypeScope.tag(document0)
 
 Tags a document with type information.
+
+### PouchDB - Methods
+
+
+
+### NANO - Methods
 
 #### TypeScope.insert(document)
 
@@ -157,5 +163,5 @@ You must have docker installed.
 - [x] Type based design documents
 - [x] Per type write security
 - [x] Partition types in database
-- [-] PouchDB support
+- [x] PouchDB support
 - [ ] Foreign keys

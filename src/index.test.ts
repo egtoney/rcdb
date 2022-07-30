@@ -1,11 +1,11 @@
 test('nano api externally available', () => {
-	const api = require("./index");
+	const api = require('./index');
 
-	expect(api).toHaveProperty("nano");
-})
+	expect(api).toHaveProperty('nano');
+});
 
 test('pouchdb api externally available', () => {
-	const api = require("./index");
+	const api = require('./index');
 
-	expect(api).toHaveProperty("pouchdb");
-})
+	expect(api).toHaveProperty('pouchdb');
+});

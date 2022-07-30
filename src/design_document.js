@@ -11,7 +11,7 @@ module.exports = (design_document) => {
 		_id: design_document.dd_name,
 		meta: {
 			indexes: design_document.indexes,
-			write_roles: design_document.write_roles
+			write_roles: design_document.write_roles,
 		},
 		views: {
 			all_docs: {
